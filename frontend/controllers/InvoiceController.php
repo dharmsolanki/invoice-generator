@@ -12,8 +12,12 @@ class InvoiceController extends \yii\web\Controller
 {
     public function actionIndex()
     {
-        $model = new Invoice();
-        return $this->render('index', ['model' => $model]);
+        if (!Yii::$app->user->isGuest) {
+            $model = new Invoice();
+            return $this->render('index', ['model' => $model]);
+        } else {
+            return $this->redirect(['site/login']);
+        }
     }
 
     public function actionCreateInvoice()
@@ -47,8 +51,12 @@ class InvoiceController extends \yii\web\Controller
 
     public function actionViewInvoice()
     {
-        $model = Invoice::find()->where(['user_id' => Yii::$app->user->identity->id])->all();
-        return $this->render('invoiceList', ['model' => $model]);
+        if (!Yii::$app->user->isGuest) {
+            $model = Invoice::find()->where(['user_id' => Yii::$app->user->identity->id])->all();
+            return $this->render('invoiceList', ['model' => $model]);
+        } else {
+            return $this->redirect(['site/login']);
+        }
     }
 
     public function actionEdit($id)
@@ -56,14 +64,14 @@ class InvoiceController extends \yii\web\Controller
         $model = Invoice::find()->where(['id' => $id])->one();
         $products = Product::find()->where(['invoice_id' => $id])->all();
         $postRequest = Yii::$app->request->post('Invoice');
-    
+
         if (Yii::$app->request->isPost) {
             $model->customer_name = $postRequest['customer_name'];
             $model->customer_email = $postRequest['customer_email'];
             $model->invoice_date = $postRequest['invoice_date'];
             $model->amount = $postRequest['amount'];
             $model->save(false);
-    
+
             // Update products
             $productIds = Yii::$app->request->post('Product')['id'];
             $productNames = Yii::$app->request->post('Product')['name'];
@@ -76,13 +84,13 @@ class InvoiceController extends \yii\web\Controller
                     $product->save(false);
                 }
             }
-    
+
             return $this->redirect(['invoice/view-invoice']);
         }
-    
+
         return $this->render('index', ['model' => $model, 'products' => $products]);
     }
-    
+
 
     /**  
      * Delete  
